@@ -47,6 +47,11 @@ describe("VolcanoCoin", function () {
     expect(transfer).to.emit(volcanoCoin, "Transfer").withArgs(6000, notOwner.address);
     expect(await volcanoCoin.balances(owner.address)).to.equal(4000);
     expect(await volcanoCoin.balances(notOwner.address)).to.equal(6000);
+    const firstElement = await volcanoCoin.payments(owner.address, 0);
+    expect(firstElement.recipient).to.equal(notOwner.address);
+    expect(firstElement.amount).to.equal(6000);
+    await expect(volcanoCoin.payments(owner.address, 1)).to.be.reverted;
+    await expect(volcanoCoin.payments(notOwner.address, 0)).to.be.reverted;
   });
 
   it("should not transfer when balance not enough", async function () {
