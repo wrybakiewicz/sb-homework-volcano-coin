@@ -4,13 +4,23 @@ pragma solidity ^0.8.0;
 import "hardhat/console.sol";
 
 contract VolcanoCoin {
-    uint public totalSupply;
+    uint public totalSupply = 10_000;
+    address owner;
 
-    constructor(uint _totalSupply) {
-        totalSupply = _totalSupply;
+    event SupplyIncreased(uint increase);
+
+    constructor() {
+        owner = msg.sender;
     }
 
-    function increaseTotalSupply() public {
-        totalSupply += 1000;
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can execute this");
+        _;
+    }
+
+    function increaseTotalSupply() public onlyOwner {
+        uint increase = 1000;
+        totalSupply += increase;
+        emit SupplyIncreased(increase);
     }
 }
