@@ -5,12 +5,15 @@ import "hardhat/console.sol";
 
 contract VolcanoCoin {
     uint public totalSupply = 10_000;
-    address owner;
+    address public owner;
+    mapping(address => uint) public balances;
 
     event SupplyIncreased(uint increase);
+    event Transfer(uint amount, address recipient);
 
     constructor() {
         owner = msg.sender;
+        balances[msg.sender] = totalSupply;
     }
 
     modifier onlyOwner() {
@@ -21,6 +24,14 @@ contract VolcanoCoin {
     function increaseTotalSupply() public onlyOwner {
         uint increase = 1000;
         totalSupply += increase;
+        balances[msg.sender] += increase;
         emit SupplyIncreased(increase);
+    }
+
+    function transfer(uint amount, address recipient) public {
+        require(balances[msg.sender] >= amount, "Balance not enough to make a transfer");
+        balances[msg.sender] -= amount;
+        balances[recipient] += amount;
+        emit Transfer(amount, recipient);
     }
 }
