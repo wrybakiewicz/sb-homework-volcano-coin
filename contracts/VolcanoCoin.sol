@@ -1,42 +1,30 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-contract VolcanoCoin {
-    uint public totalSupply = 10_000;
-    address public owner;
-    mapping(address => uint) public balances;
-    mapping(address => Payment[]) public payments;
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-    event SupplyIncreased(uint increase);
-    event Transfer(uint amount, address recipient);
+contract VolcanoCoin is ERC20, Ownable {
+    mapping(address => Payment[]) public payments;
 
     struct Payment {
         uint amount;
         address recipient;
     }
 
-    constructor() {
-        owner = msg.sender;
-        balances[msg.sender] = totalSupply;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can execute this");
-        _;
+    constructor() ERC20("VolcanoCoin", "VLC") {
+        _mint(msg.sender, 10_000);
     }
 
     function increaseTotalSupply() public onlyOwner {
-        uint increase = 1000;
-        totalSupply += increase;
-        balances[msg.sender] += increase;
-        emit SupplyIncreased(increase);
+        _mint(msg.sender, 1000);
     }
 
-    function transfer(uint amount, address recipient) public {
-        require(balances[msg.sender] >= amount, "Balance not enough to make a transfer");
-        balances[msg.sender] -= amount;
-        balances[recipient] += amount;
-        payments[msg.sender].push(Payment(amount, recipient));
-        emit Transfer(amount, recipient);
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
+        payments[from].push(Payment(amount, to));
     }
 }

@@ -10,7 +10,7 @@ describe("VolcanoCoin", function () {
 
     expect(await volcanoCoin.totalSupply()).to.equal(10000);
     expect(await volcanoCoin.owner()).to.equal(owner.address);
-    expect(await volcanoCoin.balances(owner.address)).to.equal(10000);
+    expect(await volcanoCoin.balanceOf(owner.address)).to.equal(10000);
   });
 
   it("should increase total supply", async function () {
@@ -22,8 +22,9 @@ describe("VolcanoCoin", function () {
     const increaseTx = await volcanoCoin.increaseTotalSupply();
 
     expect(await volcanoCoin.totalSupply()).to.equal(11000);
-    expect(increaseTx).to.emit(volcanoCoin, "SupplyIncreased").withArgs(1000);
-    expect(await volcanoCoin.balances(owner.address)).to.equal(11000);
+    await expect(increaseTx).to.emit(volcanoCoin, "Transfer")
+        .withArgs('0x0000000000000000000000000000000000000000', owner.address, 1000);
+    expect(await volcanoCoin.balanceOf(owner.address)).to.equal(11000);
   });
 
   it("should not increase total supply if not executed by owner", async function () {
@@ -32,7 +33,7 @@ describe("VolcanoCoin", function () {
     const volcanoCoin = await VolcanoCoin.deploy();
     await volcanoCoin.deployed();
 
-    await expect(volcanoCoin.connect(notOwner).increaseTotalSupply()).to.be.revertedWith("Only owner can execute this");
+    await expect(volcanoCoin.connect(notOwner).increaseTotalSupply()).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
   it("should change balances after transfer", async function () {
@@ -41,12 +42,12 @@ describe("VolcanoCoin", function () {
     const volcanoCoin = await VolcanoCoin.deploy();
     await volcanoCoin.deployed();
 
-    const transfer = await volcanoCoin.transfer(6000, notOwner.address);
+    const transfer = await volcanoCoin.transfer(notOwner.address, 6000);
 
     expect(await volcanoCoin.totalSupply()).to.equal(10000);
-    expect(transfer).to.emit(volcanoCoin, "Transfer").withArgs(6000, notOwner.address);
-    expect(await volcanoCoin.balances(owner.address)).to.equal(4000);
-    expect(await volcanoCoin.balances(notOwner.address)).to.equal(6000);
+    await expect(transfer).to.emit(volcanoCoin, "Transfer").withArgs(owner.address, notOwner.address, 6000);
+    expect(await volcanoCoin.balanceOf(owner.address)).to.equal(4000);
+    expect(await volcanoCoin.balanceOf(notOwner.address)).to.equal(6000);
     const firstElement = await volcanoCoin.payments(owner.address, 0);
     expect(firstElement.recipient).to.equal(notOwner.address);
     expect(firstElement.amount).to.equal(6000);
@@ -60,6 +61,6 @@ describe("VolcanoCoin", function () {
     const volcanoCoin = await VolcanoCoin.deploy();
     await volcanoCoin.deployed();
 
-    await expect(volcanoCoin.transfer(11000, notOwner.address)).to.be.revertedWith("Balance not enough to make a transfer");
+    await expect(volcanoCoin.transfer(notOwner.address, 11000)).to.be.revertedWith("ERC20: transfer amount exceeds balance");
   });
 });
