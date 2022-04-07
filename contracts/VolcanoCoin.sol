@@ -27,4 +27,8 @@ contract VolcanoCoin is ERC20, Ownable {
     ) internal override {
         payments[from].push(Payment(amount, to));
     }
+
+    function getPayments(address _sender) public view returns (Payment[] memory) {
+        return payments[_sender];
+    }
 }
